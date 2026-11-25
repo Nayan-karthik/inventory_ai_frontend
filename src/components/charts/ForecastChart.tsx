@@ -23,8 +23,8 @@ export function ForecastChart({ data, height = 340 }: { data: ForecastPoint[]; h
         <ComposedChart data={rows} margin={{ top: 12, right: 12, bottom: 0, left: -14 }}>
           <defs>
             <linearGradient id="forecastRange" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.32} />
-              <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0.06} />
+              <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.22} />
+              <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0.03} />
             </linearGradient>
           </defs>
           <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 6" vertical={false} />
@@ -45,13 +45,16 @@ export function ForecastChart({ data, height = 340 }: { data: ForecastPoint[]; h
             cursor={{ stroke: "var(--color-border)" }}
             content={({ active, payload, label }) => {
               if (!active || !payload || !payload.length) return null;
-              const dataPoint = payload[0]?.payload as (ForecastPoint & { rangeBase?: number; rangeSpan?: number });
+              const dataPoint = payload[0]?.payload as ForecastPoint & {
+                rangeBase?: number;
+                rangeSpan?: number;
+              };
               return (
-                <div className="rounded-xl border border-border bg-popover/95 p-3 text-xs shadow-md backdrop-blur-sm">
+                <div className="rounded-xl border border-border bg-popover/95 p-3 text-xs shadow-lg backdrop-blur-sm">
                   <div className="mb-2 font-semibold text-foreground">{label}</div>
                   <div className="space-y-1.5">
                     {dataPoint?.actual !== null && dataPoint?.actual !== undefined && (
-                      <div className="flex items-center justify-between gap-4 text-chart-2">
+                      <div className="flex items-center justify-between gap-4 text-emerald-700">
                         <span className="flex items-center gap-1.5">
                           <span className="h-2 w-2 rounded-full bg-chart-2" />
                           Actual Demand:
@@ -69,9 +72,9 @@ export function ForecastChart({ data, height = 340 }: { data: ForecastPoint[]; h
                       </div>
                     )}
                     {dataPoint?.rangeLow !== null && dataPoint?.rangeHigh !== null && (
-                      <div className="flex items-center justify-between gap-4 text-muted-foreground border-t border-border/50 pt-1 mt-1">
+                      <div className="mt-1 flex items-center justify-between gap-4 border-t border-border pt-1 text-muted-foreground">
                         <span className="flex items-center gap-1.5">
-                          <span className="h-2 w-2 rounded bg-primary/40" />
+                          <span className="h-2 w-2 rounded bg-primary/30" />
                           Forecast Range:
                         </span>
                         <span className="font-medium text-foreground">
@@ -114,7 +117,7 @@ export function ForecastChart({ data, height = 340 }: { data: ForecastPoint[]; h
           <Line
             type="monotone"
             dataKey="predicted"
-            stroke="var(--color-primary-bright)"
+            stroke="var(--color-primary)"
             strokeWidth={2.4}
             strokeDasharray="5 4"
             dot={false}
@@ -139,7 +142,7 @@ export function ChartLegend() {
         <span className="font-medium text-foreground">Predicted Demand</span> (ML Model)
       </span>
       <span className="flex items-center gap-2">
-        <span className="h-3 w-4 rounded bg-primary/25 border border-primary/30" />
+        <span className="h-3 w-4 rounded border border-primary/30 bg-primary/15" />
         <span className="font-medium text-foreground">Forecast Range</span> (Confidence Band)
       </span>
     </div>

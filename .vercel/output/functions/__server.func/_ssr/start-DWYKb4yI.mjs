@@ -1,4 +1,4 @@
-import { z as isPromise } from "../_libs/@tanstack/react-router+[...].mjs";
+import { B as isPromise } from "../_libs/@tanstack/react-router+[...].mjs";
 import { n as createMiddleware, t as createCsrfMiddleware } from "./createCsrfMiddleware-BdK_4__8.mjs";
 import { t as renderErrorPage } from "./ssr.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/start-DWYKb4yI.js

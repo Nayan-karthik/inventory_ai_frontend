@@ -1,0 +1,1 @@
+import{b as e}from"./index-fzKBhikt.js";import{o as t}from"./button-CBdagbKo.js";var n=e();function r({className:e,...r}){return(0,n.jsx)(`div`,{className:t(`animate-pulse rounded-md bg-primary/10`,e),...r})}export{r as t};

@@ -5,6 +5,7 @@ import { Plus, Search, Trash2, Upload, Pencil, PackageX } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app/AppShell";
+import { UploadModal } from "@/components/app/UploadModal";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,6 +75,7 @@ function InventoryPage() {
   const [supplier, setSupplier] = useState("all");
   const [editing, setEditing] = useState<Product | null>(null);
   const [open, setOpen] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
   const [form, setForm] = useState(empty);
 
   useEffect(() => {
@@ -204,11 +206,7 @@ function InventoryPage() {
 
           <Button
             variant="outlineCrimson"
-            onClick={() =>
-              toast("CSV import", {
-                description: "Connect a data source to import.",
-              })
-            }
+            onClick={() => setUploadOpen(true)}
           >
             <Upload className="h-4 w-4" /> Import CSV
           </Button>
@@ -459,6 +457,8 @@ function InventoryPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <UploadModal open={uploadOpen} onOpenChange={setUploadOpen} />
     </AppShell>
   );
 }

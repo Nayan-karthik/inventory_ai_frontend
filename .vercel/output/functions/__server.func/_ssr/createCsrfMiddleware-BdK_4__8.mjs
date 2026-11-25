@@ -1,4 +1,4 @@
-import { z as isPromise } from "../_libs/@tanstack/react-router+[...].mjs";
+import { B as isPromise } from "../_libs/@tanstack/react-router+[...].mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/createCsrfMiddleware-BdK_4__8.js
 var createMiddleware = (options, __opts) => {
 	const resolvedOptions = {

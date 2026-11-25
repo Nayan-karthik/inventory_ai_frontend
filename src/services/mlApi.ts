@@ -82,8 +82,21 @@ export interface RestockOrderCreate {
   quantity: number;
 }
 
-export const getForecast = async (): Promise<Forecast[]> => {
-  const response = await mlApi.get<Forecast[]>("/forecast");
+export interface BackendHealth {
+  message: string;
+  status: string;
+  active_dataset: DatasetStatus;
+}
+
+export const getBackendHealth = async (): Promise<BackendHealth> => {
+  const response = await mlApi.get<BackendHealth>("/");
+  return response.data;
+};
+
+export const getForecast = async (productId?: string): Promise<Forecast[]> => {
+  const response = await mlApi.get<Forecast[]>("/forecast", {
+    params: productId ? { product_id: productId } : undefined,
+  });
   return response.data;
 };
 

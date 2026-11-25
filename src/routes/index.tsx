@@ -7,6 +7,7 @@ import {
   LineChart as LineChartIcon,
   PackageCheck,
   TrendingUp,
+  UploadCloud,
 } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 import { SiteNav } from "@/components/site/SiteNav";
@@ -48,63 +49,65 @@ const spark = buildForecast(7, 2).map((p) => ({
 }));
 
 const healthColors = [
-  "var(--color-chart-5)",
+  "var(--color-chart-2)",
   "var(--color-warning)",
-  "var(--color-primary-bright)",
+  "var(--color-destructive)",
 ];
 
 function Landing() {
   const forecast = buildForecast(30, 1);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-foreground">
       <SiteNav />
 
       {/* HERO */}
-      <section className="radial-crimson relative overflow-hidden px-4 pt-36 pb-16 sm:pt-44">
+      <section className="radial-crimson relative overflow-hidden px-4 pt-32 pb-16 sm:pt-40">
         <div className="mx-auto max-w-4xl text-center">
           <Link
             to="/forecasts"
-            className="inline-flex items-center gap-2 rounded-full border border-primary/35 bg-primary/10 px-4 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-primary/18"
+            className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-card/90 px-4 py-1.5 text-xs font-medium text-foreground shadow-xs transition-colors hover:border-primary/40 hover:bg-primary/5"
           >
             <CircleDot className="h-3.5 w-3.5 text-primary" />
             AI-Powered Inventory Intelligence
             <ArrowRight className="h-3.5 w-3.5 text-primary" />
           </Link>
 
-          <h1 className="mt-8 text-5xl leading-[1.05] font-bold sm:text-6xl md:text-7xl">
-            Predict <span className="text-primary">Demand</span>.
+          <h1 className="mt-8 text-5xl leading-[1.06] font-bold tracking-tight sm:text-6xl md:text-7xl">
+            Predict <span className="text-gradient-crimson">Demand</span>.
             <br />
-            Restock With <span className="text-primary">Confidence</span>.
+            Restock With <span className="text-gradient-crimson">Confidence</span>.
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-base text-muted-foreground sm:text-lg">
-            Turn historical sales data into accurate demand forecasts and smarter inventory decisions with machine learning.
+            Turn historical sales data or any POS CSV export into accurate ML demand forecasts and smarter restocking decisions.
           </p>
 
           <div className="mt-9 flex flex-wrap justify-center gap-3">
             <Button asChild size="lg" variant="crimson">
-              <Link to="/forecasts">
-                Start Forecasting <ArrowRight className="h-4 w-4" />
+              <Link to="/dashboard">
+                Open Dashboard <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
             <Button asChild size="lg" variant="outlineCrimson">
-              <Link to="/dashboard">View Dashboard</Link>
+              <Link to="/forecasts">
+                <UploadCloud className="h-4 w-4" /> Explore Forecasts
+              </Link>
             </Button>
           </div>
         </div>
 
         {/* DASHBOARD PREVIEW */}
         <div className="mx-auto mt-16 max-w-6xl">
-          <div className="rounded-3xl border border-border bg-surface/80 p-3 shadow-[0_60px_140px_-60px_var(--primary)] sm:p-5">
+          <div className="rounded-3xl border border-border bg-card/70 p-3 shadow-[0_32px_90px_-30px_oklch(0.51_0.19_262/0.16)] backdrop-blur-sm sm:p-5">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {heroStats.map((s) => (
-                <div key={s.label} className="rounded-2xl border border-border bg-card p-4">
+                <div key={s.label} className="rounded-2xl border border-border bg-card p-4 shadow-2xs">
                   <p className="text-xs uppercase tracking-widest text-subtle-foreground">
                     {s.label}
                   </p>
                   <p
-                    className={`mt-2 font-display text-2xl font-bold ${s.accent ? "text-primary" : ""}`}
+                    className={`mt-2 font-display text-2xl font-bold ${s.accent ? "text-primary" : "text-foreground"}`}
                   >
                     {s.value}
                   </p>
@@ -112,7 +115,7 @@ function Landing() {
               ))}
             </div>
 
-            <div className="mt-3 rounded-2xl border border-border bg-card p-4 sm:p-6">
+            <div className="mt-3 rounded-2xl border border-border bg-card p-4 shadow-2xs sm:p-6">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <h3 className="text-lg font-semibold">Demand Forecast</h3>
                 <ChartLegend />
@@ -131,7 +134,7 @@ function Landing() {
               Everything you need to make smarter inventory decisions
             </h2>
             <p className="mt-4 text-muted-foreground">
-              StockAI combines historical demand, machine learning and real-time inventory data into one intelligent platform.
+              StockAI combines historical demand, machine learning, and POS CSV ingestion into one light, fast workspace.
             </p>
           </div>
 
@@ -142,7 +145,7 @@ function Landing() {
                   From raw sales data to intelligent restocking decisions.
                 </h3>
                 <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
-                  Analyze historical demand, identify trends, forecast future requirements and automatically calculate recommended reorder quantities.
+                  Upload any Square, Shopify, Toast, or custom POS CSV, retrain Random Forest models in seconds, and automatically calculate recommended reorder quantities.
                 </p>
               </div>
               <Button asChild variant="crimson" className="mt-8 w-fit">
@@ -152,7 +155,7 @@ function Landing() {
               </Button>
             </div>
 
-            <div className="rounded-3xl border border-border bg-surface p-4 sm:p-5">
+            <div className="rounded-3xl border border-border bg-secondary/50 p-4 sm:p-5">
               <div className="grid gap-4 md:grid-cols-2">
                 <MiniPanel title="Inventory Overview" icon={Boxes}>
                   <div className="grid grid-cols-2 gap-3">
@@ -162,7 +165,7 @@ function Landing() {
                       ["Suppliers", "4"],
                       ["Low stock", "24"],
                     ].map(([k, v]) => (
-                      <div key={k} className="rounded-xl bg-secondary/60 p-3">
+                      <div key={k} className="rounded-xl border border-border/60 bg-secondary/60 p-3">
                         <p className="text-[11px] uppercase tracking-wider text-subtle-foreground">
                           {k}
                         </p>
@@ -213,14 +216,14 @@ function Landing() {
                       <AreaChart data={spark}>
                         <defs>
                           <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.45} />
+                            <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.28} />
                             <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} />
                           </linearGradient>
                         </defs>
                         <Area
                           type="monotone"
                           dataKey="v"
-                          stroke="var(--color-primary-bright)"
+                          stroke="var(--color-primary)"
                           strokeWidth={2}
                           fill="url(#sparkFill)"
                         />
@@ -228,7 +231,7 @@ function Landing() {
                     </ResponsiveContainer>
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    Next 7 days: <span className="text-primary">+18.4%</span> expected demand
+                    Next 7 days: <span className="font-medium text-primary">+18.4%</span> expected demand
                   </p>
                 </MiniPanel>
 
@@ -237,9 +240,9 @@ function Landing() {
                     {products.slice(0, 3).map((p) => (
                       <div
                         key={p.id}
-                        className="flex items-center justify-between gap-2 rounded-xl bg-secondary/60 px-3 py-2"
+                        className="flex items-center justify-between gap-2 rounded-xl border border-border/60 bg-secondary/50 px-3 py-2"
                       >
-                        <span className="truncate text-xs">{p.name}</span>
+                        <span className="truncate text-xs font-medium">{p.name}</span>
                         <StatusBadge status={statusOf(p)} />
                       </div>
                     ))}
@@ -281,14 +284,14 @@ function Landing() {
                 <AreaChart data={spark}>
                   <defs>
                     <linearGradient id="cardFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.5} />
+                      <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.3} />
                       <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <Area
                     type="monotone"
                     dataKey="v"
-                    stroke="var(--color-primary-bright)"
+                    stroke="var(--color-primary)"
                     strokeWidth={2}
                     fill="url(#cardFill)"
                   />
@@ -300,7 +303,7 @@ function Landing() {
           <div className="panel p-7">
             <h3 className="text-xl font-semibold">Smart Restocking</h3>
             <p className="mt-3 text-sm text-muted-foreground">
-              Automatically identify products that need replenishment and calculaterecommendedorderquantities.
+              Automatically identify products that need replenishment and calculate recommended order quantities.
             </p>
             <div className="mt-6 h-28">
               <ResponsiveContainer width="100%" height="100%">
@@ -311,7 +314,7 @@ function Landing() {
                         key={i}
                         fill={
                           p.recommendedQty > 0
-                            ? "var(--color-primary-bright)"
+                            ? "var(--color-primary)"
                             : "var(--color-muted)"
                         }
                       />
@@ -325,7 +328,7 @@ function Landing() {
           <div className="panel p-7">
             <h3 className="text-xl font-semibold">Inventory Intelligence</h3>
             <p className="mt-3 text-sm text-muted-foreground">
-              Monitor stock levels, demand trends and inventory health from one unified dashboard.
+              Monitor stock levels, demand trends, and inventory health from one unified dashboard.
             </p>
             <div className="mt-6 h-28">
               <ResponsiveContainer width="100%" height="100%">
@@ -349,7 +352,7 @@ function Landing() {
         </div>
       </section>
 
-      <footer className="border-t border-border px-4 py-10">
+      <footer className="border-t border-border bg-card/50 px-4 py-10">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4">
           <Logo />
           <p className="text-sm text-subtle-foreground">
@@ -371,7 +374,7 @@ function MiniPanel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-4">
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-2xs">
       <div className="mb-3 flex items-center gap-2">
         <Icon className="h-4 w-4 text-primary" />
         <span className="text-sm font-medium">{title}</span>

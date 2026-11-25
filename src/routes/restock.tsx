@@ -1,18 +1,26 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, Clock, PackageCheck, ShieldCheck, TrendingUp } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  CheckCircle2,
+  Clock,
+  PackageCheck,
+  ShieldCheck,
+  TrendingUp,
+  ClipboardList,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app/AppShell";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
 import {
   createRestockOrder,
   getRestockOrders,
   getRestockRecommendations,
-  type RestockOrder,
   type RestockRecommendation,
 } from "@/services/mlApi";
 
@@ -36,40 +44,43 @@ export const Route = createFileRoute("/restock")({
 });
 
 function RestockPage() {
+  const queryClient = useQueryClient();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["ml-restock"],
     queryFn: getRestockRecommendations,
   });
-
-  const [selectedProduct, setSelectedProduct] = useState<RestockRecommendation | null>(null);
 
   const { data: savedOrders = [] } = useQuery({
     queryKey: ["restock-orders"],
     queryFn: getRestockOrders,
   });
 
+  const [selectedProduct, setSelectedProduct] = useState<RestockRecommendation | null>(null);
+  const [orderQty, setOrderQty] = useState<string>("");
+  const [submitting, setSubmitting] = useState(false);
   const [pendingOrders, setPendingOrders] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    if (savedOrders.length > 0) {
-      setPendingOrders(new Set(savedOrders.map((order) => order.product_id)));
-    }
+    setPendingOrders(new Set(savedOrders.map((order) => order.product_id)));
   }, [savedOrders]);
 
   const needs = (data ?? []).filter((product) => product.recommended_order > 0);
 
   const handleCreateOrder = (product: RestockRecommendation) => {
     setSelectedProduct(product);
+    setOrderQty(String(product.recommended_order));
   };
 
   const handleConfirmOrder = async () => {
     if (!selectedProduct) return;
+    const quantity = Math.max(1, parseInt(orderQty, 10) || selectedProduct.recommended_order);
+    setSubmitting(true);
 
     try {
       await createRestockOrder({
         product_id: selectedProduct.product_id,
         product_name: selectedProduct.product_name,
-        quantity: selectedProduct.recommended_order,
+        quantity,
       });
 
       setPendingOrders((current) => {
@@ -78,17 +89,20 @@ function RestockPage() {
         return updated;
       });
 
+      await queryClient.invalidateQueries({ queryKey: ["restock-orders"] });
+
       toast.success("Restock order created", {
-        description: `${selectedProduct.recommended_order} × ${selectedProduct.product_name} is now pending.`,
+        description: `${quantity} × ${selectedProduct.product_name} is now pending.`,
       });
 
       setSelectedProduct(null);
     } catch (error) {
       console.error(error);
-
       toast.error("Failed to create restock order", {
         description: "Make sure the FastAPI server is running.",
       });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -106,17 +120,14 @@ function RestockPage() {
       ) : isError ? (
         <div className="panel flex flex-col items-center gap-3 px-6 py-20 text-center">
           <p className="font-medium">Unable to load restocking data</p>
-
           <p className="max-w-sm text-sm text-muted-foreground">
             Make sure the FastAPI server is running on port 8000.
           </p>
         </div>
       ) : needs.length === 0 ? (
         <div className="panel flex flex-col items-center gap-3 px-6 py-20 text-center">
-          <CheckCircle2 className="h-8 w-8 text-primary" />
-
+          <CheckCircle2 className="h-8 w-8 text-emerald-600" />
           <p className="font-medium">Everything is well stocked</p>
-
           <p className="max-w-sm text-sm text-muted-foreground">
             No product is projected to require replenishment within the forecast window.
           </p>
@@ -131,7 +142,6 @@ function RestockPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h2 className="text-xl font-semibold">{product.product_name}</h2>
-
                     <p className="mt-1 text-xs text-subtle-foreground">
                       {product.product_id} · Lead time: {product.supplier_lead_time_days} days
                     </p>
@@ -144,15 +154,12 @@ function RestockPage() {
 
                 <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
                   <Metric icon={PackageCheck} label="Current Stock" value={product.current_stock} />
-
                   <Metric
                     icon={TrendingUp}
                     label="Predicted 7-Day"
                     value={Math.round(product.predicted_7_day_demand)}
                   />
-
                   <Metric icon={ShieldCheck} label="Safety Stock" value={product.safety_stock} />
-
                   <Metric
                     icon={Clock}
                     label="Lead Time"
@@ -160,12 +167,11 @@ function RestockPage() {
                   />
                 </div>
 
-                <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-primary/35 bg-primary/8 px-5 py-4">
+                <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4">
                   <div>
                     <p className="text-xs uppercase tracking-widest text-subtle-foreground">
                       Recommended Order
                     </p>
-
                     <p className="mt-1 font-display text-2xl font-bold text-primary">
                       {product.recommended_order} Units
                     </p>
@@ -188,14 +194,83 @@ function RestockPage() {
         </div>
       )}
 
+      {/* LOGGED RESTOCK ORDERS HISTORY */}
+      <section className="panel mt-8 overflow-hidden">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+          <div className="flex items-center gap-2.5">
+            <ClipboardList className="h-5 w-5 text-primary" />
+            <div>
+              <h2 className="text-base font-semibold">Restock Orders Ledger</h2>
+              <p className="text-xs text-muted-foreground">
+                Orders persisted in the backend database.
+              </p>
+            </div>
+          </div>
+          <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+            {savedOrders.length} total
+          </span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[540px] text-left text-sm">
+            <thead>
+              <tr className="bg-secondary/40 text-xs uppercase tracking-wider text-subtle-foreground">
+                <th className="px-6 py-3 font-medium">Order ID</th>
+                <th className="px-4 py-3 font-medium">Product</th>
+                <th className="px-4 py-3 font-medium">Quantity</th>
+                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-6 py-3 font-medium">Created</th>
+              </tr>
+            </thead>
+            <tbody>
+              {savedOrders.length === 0 ? (
+                <tr className="border-t border-border">
+                  <td colSpan={5} className="px-6 py-10 text-center text-muted-foreground">
+                    No restock orders created yet.
+                  </td>
+                </tr>
+              ) : (
+                savedOrders.map((order) => (
+                  <tr
+                    key={order.id}
+                    className="border-t border-border transition-colors hover:bg-card-hover"
+                  >
+                    <td className="px-6 py-3.5 font-mono text-xs text-subtle-foreground">
+                      #{order.id}
+                    </td>
+                    <td className="px-4 py-3.5 font-medium">
+                      {order.product_name}{" "}
+                      <span className="text-xs text-subtle-foreground">({order.product_id})</span>
+                    </td>
+                    <td className="px-4 py-3.5 font-semibold text-primary">{order.quantity} units</td>
+                    <td className="px-4 py-3.5">
+                      <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-medium capitalize text-amber-700">
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-3.5 text-xs text-muted-foreground">
+                      {order.created_at
+                        ? new Date(order.created_at).toLocaleString("en-IN", {
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                          })
+                        : "—"}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       {selectedProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/35 px-4 backdrop-blur-sm">
           <div className="panel w-full max-w-md p-6 shadow-2xl">
             <div>
               <h2 className="text-xl font-semibold">Confirm Restock Order</h2>
-
-              <p className="mt-2 text-sm text-muted-foreground">
-                Are you sure you want to create a restock order for this product?
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                Review or adjust the order quantity before submitting to the backend.
               </p>
             </div>
 
@@ -203,25 +278,32 @@ function RestockPage() {
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="font-semibold">{selectedProduct.product_name}</p>
-
-                  <p className="mt-1 text-xs text-subtle-foreground">
-                    {selectedProduct.product_id}
+                  <p className="mt-0.5 text-xs text-subtle-foreground">
+                    {selectedProduct.product_id} · Recommended: {selectedProduct.recommended_order} units
                   </p>
                 </div>
-
-                <p className="font-display text-xl font-bold text-primary">
-                  {selectedProduct.recommended_order} Units
-                </p>
+              </div>
+              <div className="mt-4">
+                <Label htmlFor="order-qty" className="text-xs text-muted-foreground">
+                  Order Quantity
+                </Label>
+                <Input
+                  id="order-qty"
+                  type="number"
+                  min={1}
+                  className="mt-1.5 bg-card"
+                  value={orderQty}
+                  onChange={(e) => setOrderQty(e.target.value)}
+                />
               </div>
             </div>
 
             <div className="mt-6 flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setSelectedProduct(null)}>
+              <Button variant="outline" onClick={() => setSelectedProduct(null)} disabled={submitting}>
                 Cancel
               </Button>
-
-              <Button variant="crimson" onClick={handleConfirmOrder}>
-                Confirm Order
+              <Button variant="crimson" onClick={handleConfirmOrder} disabled={submitting}>
+                {submitting ? "Submitting..." : "Confirm Order"}
               </Button>
             </div>
           </div>
@@ -246,7 +328,6 @@ function Metric({
         <Icon className="h-3.5 w-3.5" />
         {label}
       </span>
-
       <p className="mt-1.5 font-display text-lg font-semibold">{value}</p>
     </div>
   );

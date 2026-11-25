@@ -17,9 +17,9 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         crimson:
-          "bg-primary text-primary-foreground shadow-sm hover:bg-primary-bright hover:shadow-[0_0_28px_-6px_var(--primary)] transition-all",
+          "bg-primary text-primary-foreground shadow-sm hover:bg-primary-bright hover:shadow-[0_10px_24px_-8px_color-mix(in_oklab,var(--primary)_45%,transparent)] transition-all",
         outlineCrimson:
-          "border border-primary/40 bg-primary/8 text-foreground hover:bg-primary/15 hover:border-primary/60 transition-all",
+          "border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 hover:border-primary/50 transition-all",
       },
       size: {
         default: "h-9 px-4 py-2",

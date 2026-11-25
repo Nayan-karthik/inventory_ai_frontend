@@ -19,12 +19,19 @@ export function StatCard({
 }) {
   return (
     <div className="panel p-5">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-medium uppercase tracking-widest text-subtle-foreground">
           {label}
         </span>
         {Icon && (
-          <Icon className={cn("h-4 w-4", accent ? "text-primary" : "text-subtle-foreground")} />
+          <span
+            className={cn(
+              "flex h-8 w-8 items-center justify-center rounded-xl",
+              accent ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground",
+            )}
+          >
+            <Icon className="h-4 w-4" />
+          </span>
         )}
       </div>
       {loading ? (

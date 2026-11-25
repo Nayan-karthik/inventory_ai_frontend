@@ -2,13 +2,12 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  Sparkles,
   UploadCloud,
   RotateCcw,
   Store,
   Layers,
   Calendar,
-  CheckCircle2,
+  ArrowLeftRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,8 +23,9 @@ export function DatasetBanner() {
   const queryClient = useQueryClient();
   const [uploadOpen, setUploadOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [switching, setSwitching] = useState(false);
 
-  const { data: status, isLoading } = useQuery<DatasetStatus>({
+  const { data: status, isError } = useQuery<DatasetStatus>({
     queryKey: ["dataset-status"],
     queryFn: getDatasetStatus,
     refetchInterval: 10000,
@@ -35,16 +35,39 @@ export function DatasetBanner() {
     setResetting(true);
     try {
       await resetToDemo();
-      toast.success("Restored Seasonal Demo Store!", {
-        description: "Back to 8 seasonal retail products with 2-year timeline.",
+      toast.success("Restored Seasonal Demo Store", {
+        description: "Back to the seasonal retail demo catalog.",
       });
       await queryClient.invalidateQueries();
     } catch (err: any) {
       toast.error("Failed to reset dataset", {
-        description: err.message,
+        description: err.response?.data?.detail || err.message,
       });
     } finally {
       setResetting(false);
+    }
+  };
+
+  const handleSwitchMode = async (targetMode: "demo" | "user") => {
+    setSwitching(true);
+    try {
+      await switchDataset(targetMode);
+      toast.success(
+        targetMode === "user" ? "Switched to Uploaded POS Store" : "Switched to Demo Store",
+      );
+      await queryClient.invalidateQueries();
+    } catch (err: any) {
+      const msg = err.response?.data?.detail || err.message;
+      if (targetMode === "user") {
+        toast.info("No uploaded POS dataset yet", {
+          description: "Upload a CSV file first to use your own store data.",
+        });
+        setUploadOpen(true);
+      } else {
+        toast.error("Failed to switch dataset", { description: msg });
+      }
+    } finally {
+      setSwitching(false);
     }
   };
 
@@ -55,29 +78,41 @@ export function DatasetBanner() {
 
   return (
     <>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/80 bg-card/60 p-3.5 backdrop-blur shadow-sm">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card/90 p-3.5 shadow-xs backdrop-blur-sm">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <Store className="h-4 w-4" />
             </span>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-foreground">
-                  {storeName}
-                </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-semibold text-foreground">{storeName}</span>
                 <Badge
-                  variant={isDemo ? "secondary" : "default"}
+                  variant="secondary"
                   className={
                     isDemo
-                      ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-xs font-medium"
-                      : "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/20 text-xs font-medium"
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-700 text-xs font-medium"
+                      : "border-indigo-200 bg-indigo-50 text-indigo-700 text-xs font-medium"
                   }
                 >
                   {isDemo ? "Demo Catalog" : "Uploaded POS"}
                 </Badge>
+                <span
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                    isError
+                      ? "bg-rose-50 text-rose-700 border border-rose-200"
+                      : "bg-emerald-50/80 text-emerald-700 border border-emerald-200/80"
+                  }`}
+                >
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      isError ? "bg-rose-500" : "bg-emerald-500"
+                    }`}
+                  />
+                  {isError ? "API Offline" : "ML API Live"}
+                </span>
               </div>
-              <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
+              <div className="mt-0.5 flex flex-wrap items-center gap-2.5 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Layers className="h-3 w-3" />
                   {numProducts} {numProducts === 1 ? "Product" : "Products"}
@@ -92,27 +127,39 @@ export function DatasetBanner() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleSwitchMode(isDemo ? "user" : "demo")}
+            disabled={switching}
+            className="h-8 gap-1.5 text-xs"
+          >
+            <ArrowLeftRight className={`h-3.5 w-3.5 ${switching ? "animate-spin" : ""}`} />
+            {isDemo ? "Use Uploaded POS" : "Switch to Demo"}
+          </Button>
+
           {!isDemo && (
             <Button
               variant="outline"
               size="sm"
               onClick={handleResetToDemo}
               disabled={resetting}
-              className="gap-1.5 text-xs h-8 border-border hover:bg-muted"
+              className="h-8 gap-1.5 text-xs"
             >
               <RotateCcw className={`h-3.5 w-3.5 ${resetting ? "animate-spin" : ""}`} />
-              Reset to Demo Store
+              Reset Demo
             </Button>
           )}
 
           <Button
             size="sm"
+            variant="crimson"
             onClick={() => setUploadOpen(true)}
-            className="gap-1.5 text-xs h-8 bg-primary text-primary-foreground hover:bg-primary/90"
+            className="h-8 gap-1.5 text-xs"
           >
             <UploadCloud className="h-3.5 w-3.5" />
-            {isDemo ? "Upload POS CSV" : "Upload Another POS CSV"}
+            {isDemo ? "Upload POS CSV" : "Upload New CSV"}
           </Button>
         </div>
       </div>
